@@ -25,7 +25,7 @@ public class UnknownWord {
 
     public Optional<SimpleWord> getDailyUnknownWord() {
         if (!words.isEmpty()) {
-            return Optional.of(words.getFirst());
+            return Optional.of(words.get(0));
         } else {
             return Optional.empty();
         }
