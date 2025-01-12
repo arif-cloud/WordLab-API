@@ -2,7 +2,6 @@ package com.example.api.vocabularyapi.controller;
 
 import com.example.api.vocabularyapi.model.*;
 import com.example.api.vocabularyapi.repository.UnknownWordRepository;
-import com.example.api.vocabularyapi.repository.UserRepository;
 import com.example.api.vocabularyapi.repository.WordDetailRepository;
 import com.example.api.vocabularyapi.repository.WordRepository;
 import com.example.api.vocabularyapi.response.PostResponse;
@@ -22,44 +21,11 @@ import java.util.Optional;
 @RequestMapping("/api/v1")
 public class WordController {
     @Autowired(required = false)
-    UserRepository userRepository;
-    @Autowired(required = false)
     WordRepository wordRepository;
     @Autowired(required = false)
     WordDetailRepository wordDetailRepository;
     @Autowired(required = false)
     UnknownWordRepository unknownWordRepository;
-
-    @PostMapping("/login")
-    public ResponseEntity<PostResponse> loginUser(@RequestBody User user) {
-        try {
-            User savedUser = userRepository.save(user);
-            unknownWordRepository.save(new UnknownWord(savedUser.getId()));
-            return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(HttpStatus.CREATED.value(), savedUser.getId()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new PostResponse(HttpStatus.NOT_FOUND.value(), e.getMessage()));
-        }
-    }
-    @GetMapping("profile/{userId}")
-    public Optional<User> getProfileInfo(@PathVariable String userId) {
-        return userRepository.findById(userId);
-    }
-
-    @PostMapping("edit/profile/{userId}")
-    public ResponseEntity<PostResponse> editProfileInfo(@PathVariable String userId, @RequestBody User user) {
-        try {
-            Optional<User> currentUser = userRepository.findById(userId);
-            if (currentUser.isPresent()) {
-                currentUser.get().editUser(user);
-                userRepository.save(currentUser.get());
-                return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(HttpStatus.CREATED.value(), "Edit successfully"));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new PostResponse(HttpStatus.CREATED.value(), "User not found!"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new PostResponse(HttpStatus.CREATED.value(), e.getMessage()));
-        }
-    }
 
     @GetMapping("/words/random")
     public List<Word> getRandomWord() { return wordRepository.findRandomWords(); }
@@ -84,6 +50,18 @@ public class WordController {
     @GetMapping("/word/random/{level}")
     public Word getRandomWordByLevel(@PathVariable String level) {
         return wordRepository.findRandomWordByLevel(level);
+    }
+
+    @PostMapping("/create/list/unknown_word/{userId}")
+    public ResponseEntity<PostResponse> createUnknownWordList(@PathVariable String userId) {
+        try {
+            if (!unknownWordRepository.existsByUserId(userId)) {
+                unknownWordRepository.save(new UnknownWord(userId));
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(new PostResponse(HttpStatus.CREATED.value(), userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new PostResponse(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+        }
     }
 
     @GetMapping("words/unknown")
